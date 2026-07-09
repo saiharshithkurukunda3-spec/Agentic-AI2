@@ -31,61 +31,61 @@ def async_retry(tries: int = 3, delay: float = 1.0, backoff: float = 2.0, except
     return decorator
 
 async def search_web(query: str, max_results: int = 5) -> List[Dict[str, str]]:
-    logger.info("Searching Brave API", query=query, max_results=max_results)
+    logger.info("Searching Tavily API", query=query, max_results=max_results)
     
     if len(query) > 250:
         query = query[:250]
         logger.warning("Query truncated to 250 characters for search", query=query)
 
-    url = "https://api.search.brave.com/res/v1/web/search"
-    headers = {
-        "Accept": "application/json",
-        "X-Subscription-Token": settings.BRAVE_API_KEY
-    }
-    params = {
-        "q": query,
-        "count": max_results
+    url = "https://api.tavily.com/search"
+    
+    payload = {
+        "api_key": settings.TAVILY_API_KEY,
+        "query": query,
+        "search_depth": "basic",
+        "max_results": max_results,
+        "include_answer": False,
+        "include_raw_content": False
     }
     
     client = get_http_client()
     
     try:
-        response = await client.get(url, headers=headers, params=params, timeout=10.0)
+        response = await client.post(url, json=payload, timeout=10.0)
         
         if response.status_code != 200:
             logger.error(
-                "Brave Search API returned non-200 response",
+                "Tavily Search API returned non-200 response",
                 status_code=response.status_code,
                 response_text=response.text
             )
             return []
             
         data = response.json()
-        web_data = data.get("web", {}) if isinstance(data, dict) else {}
-        results_list = web_data.get("results", []) if isinstance(web_data, dict) else []
+        results_list = data.get("results", []) if isinstance(data, dict) else []
         
         results = []
         if isinstance(results_list, list):
             for item in results_list:
-                if isinstance(item, dict) and "title" in item and "url" in item:
+                if isinstance(item, dict):
                     results.append({
-                        "title": str(item["title"]),
-                        "url": str(item["url"]),
-                        "snippet": str(item.get("description", ""))
+                        "title": str(item.get("title", "")),
+                        "url": str(item.get("url", "")),
+                        "snippet": str(item.get("content", ""))
                     })
                     
         logger.info("Search completed", results_count=len(results))
         return results
         
     except httpx.TimeoutException as e:
-        logger.error("Brave Search API request timed out", error=str(e))
+        logger.error("Tavily Search API request timed out", error=str(e))
         return []
     except httpx.HTTPError as e:
-        logger.error("Brave Search API HTTP connection error", error=str(e))
+        logger.error("Tavily Search API HTTP connection error", error=str(e))
         return []
     except ValueError as e:
-        logger.error("Brave Search API returned invalid JSON response", error=str(e))
+        logger.error("Tavily Search API returned invalid JSON response", error=str(e))
         return []
     except Exception as e:
-        logger.error("Unexpected error during Brave Search API query", error=str(e))
+        logger.error("Unexpected error during Tavily Search API query", error=str(e))
         return []

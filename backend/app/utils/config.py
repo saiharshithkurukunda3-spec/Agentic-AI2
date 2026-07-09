@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     GEMINI_API_KEY: str
     BRAVE_API_KEY: str
+    TAVILY_API_KEY: str
     
     ALLOWED_ORIGINS: str = "http://localhost:5173"
     COOKIE_SECURE: bool = False
