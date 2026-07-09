@@ -68,6 +68,8 @@ async def search_web(query: str, max_results: int = 5) -> List[Dict[str, str]]:
     
     try:
         response = await client.get(url, headers=headers)
+        print(response.status_code)
+        print(response.text[:3000])
         response.raise_for_status()
         
         tree = html.fromstring(response.text)
