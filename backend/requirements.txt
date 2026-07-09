@@ -11,4 +11,4 @@ lxml_html_clean==0.1.1
 python-dotenv==1.0.1
 psutil==5.9.8
 pymongo==4.6.3
-ddgs==9.6.1
+ddgs<9
